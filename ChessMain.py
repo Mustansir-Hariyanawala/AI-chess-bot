@@ -1,14 +1,12 @@
 """
 Hello World
 """
-from chessGame import GameState
 import pygame as p
-from prompt_toolkit.layout import Dimension
-from pygame.examples.sprite_texture import running
-
 import ChessEngine
 
-width = height = 512
+print(dir())
+width = 512
+height = 512
 dimension = 8 #dimension of a chessboard
 square_size = height // dimension
 mx_fps = 15
@@ -19,17 +17,19 @@ initialize global dictionary of images. This will be called
 """
 
 def load_images():
-    pieces = ['bB', 'bK','bN', 'bQ','bR','bp', 'wB', 'wK','wN','wQ','wR','wp']
+    pieces = ['bB', 'bK','bN', 'bQ', 'bR','bp', 'wB', 'wK','wN','wQ','wR','wp']
     for piece in pieces:
-        img[piece] = p.transform.scale(p.image.load("images/" + piece + ".png"), (square_size, square_size))
+        img[piece] = p.transform.scale(p.image.load("images/" + piece + ".png"),
+                                       (square_size, square_size))
 
 def main():
     p.init()
-    screen = p.display.set_mode(width, height)
+    screen = p.display.set_mode((width, height))
     clock = p.time.Clock()
     screen.fill(p.Color("white"))
     game_state = ChessEngine.GameState()
     load_images()
+    draw_game_state(screen, game_state)
     running = True
     while running:
         for e in p.event.get():
@@ -39,7 +39,7 @@ def main():
         clock.tick(mx_fps)
         p.display.flip()
 
-def drawGameState(screen, game_state):
+def draw_game_state(screen, game_state):
     draw_board(screen) #draw squares on Board
     draw_pieces(screen, game_state.board) #draw piece on the squares
 
@@ -61,14 +61,13 @@ def draw_pieces(screen, game_state):
     for row in range(dimension):
         for col in range(dimension):
             piece = game_state[row][col]
-            if piece == "--":
-                continue
-            screen.blit(img[piece], p.Rect(col * square_size,
+            if piece != "--":
+                screen.blit(img[piece], p.Rect(col * square_size,
                                            row * square_size,
                                            square_size,
                                            square_size))
 
 
 
-if __name__ == "main":
+if __name__ == "__main__":
     main()
