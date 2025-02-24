@@ -1,3 +1,3 @@
-from .ChessEngine import GameState
+from .ChessEngine import GameState, Move
 
-__all__ = ["GameState"]
+__all__ = ["GameState", "Move"]

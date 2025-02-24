@@ -29,13 +29,32 @@ def main():
     screen.fill(p.Color("white"))
     game_state = ChessEngine.GameState()
     load_images()
-    draw_game_state(screen, game_state)
     running = True
+    selected_square = () #no square selected , keep track of the last click of user (tuple: (row, col))
+    player_click = [] #keep track of player clicks (two tuples: [(6, 4), (4, 4)]
     while running:
         for e in p.event.get():
             if e.type == p.QUIT:
                 running = False
+            elif e.type == p.MOUSEBUTTONDOWN:
+                position = p.mouse.get_pos() #(x, y)
+                col = position[0]//square_size
+                row = position[1]//square_size
+                if selected_square == (row, col): #the user clicked same square twice
+                    selected_square = ()
+                    player_click = [] #clear player clicks
+                else:
+                    selected_square = (row, col)
+                    player_click.append(selected_square) #append for both 1st and 2nd clicks
+                if len(player_click) == 2: #after 2nd click
+                    move = ChessEngine.Move(player_click[0], player_click[1], game_state.board)
+                    print(move.get_chess_notation())
+                    game_state.make_move(move)
+                    selected_square = () #reset user clicks
+                    player_click = []
 
+
+        draw_game_state(screen, game_state)
         clock.tick(mx_fps)
         p.display.flip()
 
