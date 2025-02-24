@@ -28,14 +28,19 @@ def main():
     clock = p.time.Clock()
     screen.fill(p.Color("white"))
     game_state = ChessEngine.GameState()
+    valid_moves = game_state.get_valid_moves()
+    move_made = False #flag variable for when a move is made
     load_images()
     running = True
     selected_square = () #no square selected , keep track of the last click of user (tuple: (row, col))
     player_click = [] #keep track of player clicks (two tuples: [(6, 4), (4, 4)]
+
     while running:
         for e in p.event.get():
+
             if e.type == p.QUIT:
                 running = False
+
             elif e.type == p.MOUSEBUTTONDOWN:
                 position = p.mouse.get_pos() #(x, y)
                 col = position[0]//square_size
@@ -43,17 +48,28 @@ def main():
                 if selected_square == (row, col): #the user clicked same square twice
                     selected_square = ()
                     player_click = [] #clear player clicks
+
                 else:
                     selected_square = (row, col)
                     player_click.append(selected_square) #append for both 1st and 2nd clicks
                 if len(player_click) == 2: #after 2nd click
                     move = ChessEngine.Move(player_click[0], player_click[1], game_state.board)
-                    print(move.get_chess_notation())
-                    game_state.make_move(move)
+                    print(move.get_chess_notation()) #prints move made
+
+                    if move in valid_moves:
+                        game_state.make_move(move)
+                        move_made = True
                     selected_square = () #reset user clicks
                     player_click = []
 
+            elif e.type == p.KEYDOWN:
+                if e.key == p.K_z: #undo when 'z' is pressed
+                    game_state.undo_move()
+                    move_made = True
 
+        if move_made:
+            valid_moves = game_state.get_valid_moves()
+            move_made = False;
         draw_game_state(screen, game_state)
         clock.tick(mx_fps)
         p.display.flip()

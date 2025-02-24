@@ -2,6 +2,9 @@
 This class is responsible for storing all the information about the current state of a chess game. It will be
 responsible for determining the valid moves at the current state. It will also keep a move log.
 """
+
+
+
 class GameState:
     """
     Used to create functionable chessboard
@@ -19,12 +22,67 @@ class GameState:
         ]
         self.whiteToMove = True
         self.moveLog = []
+        self.square_range = range(8)
 
+    #takes moves as parameter and executes it (this will not work for castling, pawn promotion and en passant
     def make_move(self, move):
         self.board[move.start_row][move.start_col] = "--"
         self.board[move.end_row][move.end_col] = move.piece_move
         self.moveLog.append(move) #log the move so we can undo it later
         self.whiteToMove = not self.whiteToMove #swap player's turn
+
+    def undo_move(self):
+        if len(self.moveLog) == 0:
+            return
+        move = self.moveLog.pop() #retrieving recent move
+        self.board[move.start_row][move.start_col] = move.piece_move #place to be undoed
+        self.board[move.end_row][move.end_col] = move.piece_captured #place captured pawn again
+        self.whiteToMove = not self.whiteToMove #reswap player's turn
+
+    '''
+    All moves considering checks
+    '''
+    def get_valid_moves(self):
+        return self.get_all_possible_move()
+    """
+    All moves without considering checks
+    """
+
+    def get_all_possible_move(self):
+        moves = [Move((6, 4), (4, 4), self.board)]
+        for rows in self.square_range: #number of rows
+            for cols in self.square_range:#number of columns
+                turn = self.board[rows][cols][0]
+                if(turn == 'w' and self.whiteToMove) and (turn == 'b' and not self.whiteToMove):
+                    piece = self.board[rows][cols][1]
+                    if piece == 'p':
+                        self.get_pawn_moves(rows, cols, moves)
+                    elif piece == 'R':
+                        self.get_rook_moves(rows, cols, moves)
+                    elif piece == 'B':
+                        self.get_bishop_moves(rows, cols, moves)
+                    elif piece == 'N':
+                        self.get_knight_moves(rows, cols, moves)
+                    elif piece == 'Q':
+                        self.get_queen_moves(rows, cols, moves)
+                    elif piece == 'K':
+                        self.get_king_moves(rows, cols, moves)
+        return moves
+
+
+    def get_pawn_moves(self, row, column, moves):
+        pass
+    def get_rook_moves(self, row, column, moves):
+        pass
+    def get_bishop_moves(self, row, column, moves):
+        pass
+    def get_knight_moves(self, row, column, moves):
+        pass
+    def get_queen_moves(self, row, column, moves):
+        pass
+    def get_king_moves(self, row, column, moves):
+        pass
+
 
 class Move:
     ranks_to_rows = {str(rank + 1): (8 - rank - 1) for rank in range(8)}
@@ -40,6 +98,15 @@ class Move:
         self.end_col = square_end[1]
         self.piece_move = board[self.start_row][self.start_col]
         self.piece_captured = board[self.end_row][self.end_col]
+        self.moveID = self.start_row * 1000 + self.start_col * 100 + self.end_row * 10 + self.end_col
+        print(self.moveID)
+    """
+    Override the equals method
+    """
+    def __eq__(self, other):
+        if isinstance(other, Move):
+            return self.moveID == other.moveID
+        return False
 
     def get_chess_notation(self):
         #you can add to make it real chess notation
