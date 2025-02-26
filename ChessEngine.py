@@ -2,7 +2,7 @@
 This class is responsible for storing all the information about the current state of a chess game. It will be
 responsible for determining the valid moves at the current state. It will also keep a move log.
 """
-
+from operator import truediv
 
 
 class GameState:
@@ -20,6 +20,14 @@ class GameState:
             ['wp', 'wp', 'wp', 'wp', 'wp', 'wp', 'wp', 'wp'],
             ["wR", "wN", 'wB', 'wQ', 'wK', "wB", 'wN', 'wR']
         ]
+
+        self.move_function = {'p': self.get_pawn_moves,
+                              'R': self.get_rook_moves,
+                              'B': self.get_bishop_moves,
+                              'N': self.get_knight_moves,
+                              'Q': self.get_queen_moves,
+                              'K': self.get_king_moves
+                              }
         self.whiteToMove = True
         self.moveLog = []
         self.square_range = range(8)
@@ -49,31 +57,116 @@ class GameState:
     """
 
     def get_all_possible_move(self):
-        moves = [Move((6, 4), (4, 4), self.board)]
+        moves = []
         for rows in self.square_range: #number of rows
             for cols in self.square_range:#number of columns
                 turn = self.board[rows][cols][0]
-                if(turn == 'w' and self.whiteToMove) and (turn == 'b' and not self.whiteToMove):
+                if(turn == 'w' and self.whiteToMove) or (turn == 'b' and not self.whiteToMove):
                     piece = self.board[rows][cols][1]
-                    if piece == 'p':
-                        self.get_pawn_moves(rows, cols, moves)
-                    elif piece == 'R':
-                        self.get_rook_moves(rows, cols, moves)
-                    elif piece == 'B':
-                        self.get_bishop_moves(rows, cols, moves)
-                    elif piece == 'N':
-                        self.get_knight_moves(rows, cols, moves)
-                    elif piece == 'Q':
-                        self.get_queen_moves(rows, cols, moves)
-                    elif piece == 'K':
-                        self.get_king_moves(rows, cols, moves)
+                    self.move_function[piece](rows, cols, moves)
         return moves
 
 
     def get_pawn_moves(self, row, column, moves):
-        pass
+        if self.whiteToMove: #white to move
+            if self.board[row - 1][column] == '--': #1 square pawn advance
+                moves.append(Move((row, column), (row - 1, column), self.board))
+                if row == 6 and self.board[row - 2][column] == '--':
+                    moves.append(Move((row, column), (row - 2, column), self.board))
+
+            if column - 1 >= 0:
+                if self.board[row - 1][column - 1][0] == 'b': #enemy piece to capture
+                    moves.append(Move((row, column),(row - 1, column - 1),self.board))
+
+            if column + 1 <= 7:
+                if self.board[row - 1][column + 1][0] == 'b': #enemy piece to capture
+                    moves.append(Move((row, column),(row - 1, column + 1),self.board))
+
+        else:  # black to move
+            if self.board[row + 1][column] == '--': #1 square pawn advance
+                moves.append(Move((row, column),(row + 1, column),self.board))
+                if row == 1 and self.board[row + 2][column] == '--':
+                    moves.append(Move((row, column),(row + 2, column), self.board))
+
+            if column - 1 >= 0:
+                if self.board[row + 1][column - 1][0] == 'w': #enemy piece to capture
+                    moves.append(Move((row, column),(row + 1, column - 1), self.board))
+
+            if column + 1 <= 7:
+                if self.board[row + 1][column + 1][0] == 'w': #enemy piece to capture
+                    moves.append(Move((row, column), (row + 1, column + 1),self.board))
+
+
     def get_rook_moves(self, row, column, moves):
-        pass
+
+        if self.whiteToMove:
+            flag = True
+            for r in range(1, row + 1):
+                if self.board[row - r][column][0] != "w" and flag:
+                    moves.append(Move((row, column),(row - r, column), self.board))
+                    if self.board[row - r][column][0] == 'b':
+                        flag = False
+                else:
+                    break
+            flag = True
+            for r in range(1, 8 - row):
+                if self.board[row + r][column][0] != "w" and flag:
+                    moves.append(Move((row, column), (row + r, column), self.board))
+                    if self.board[row + r][column][0] == 'b':
+                        flag = False
+
+                else:
+                    break
+            flag = True
+            for c in range(1, column + 1):
+                if self.board[row][column - c][0] != "w" and flag:
+                    moves.append(Move((row, column),(row, column - c), self.board))
+                    if self.board[row][column - c][0] == 'b':
+                        flag = False
+                else:
+                    break
+            flag = True
+            for c in range(1, 8 - column):
+                if self.board[row][column + c][0] != "w" and flag:
+                    moves.append(Move((row, column),(row, column + c), self.board))
+                    if self.board[row][column + c][0] == 'b':
+                        flag = False
+                else:
+                    break
+        else:
+            flag = True
+            for r in range(1, row + 1):
+                if self.board[row - r][column][0] != "b" and flag:
+                    moves.append(Move((row, column),(row - r, column), self.board))
+                    if self.board[row - r][column][0] == 'w':
+                        flag = False
+                else:
+                    break
+            flag = True
+            for r in range(1, 8 - row):
+                if self.board[row + r][column][0] != "b" and flag:
+                    moves.append(Move((row, column),(row + r, column), self.board))
+                    if self.board[row + r][column][0] == 'w':
+                        flag = False
+                else:
+                    break
+            flag = True
+            for c in range(1, column + 1):
+                if self.board[row][column - c][0] != "b" and flag:
+                    moves.append(Move((row, column),(row, column - c), self.board))
+                    if self.board[row][column - c][0] == 'w':
+                        flag = False
+                else:
+                    break
+            flag = True
+            for c in range(1, 8 - column):
+                if self.board[row][column + c][0] != "b" and flag:
+                    moves.append(Move((row, column),(row, column + c), self.board))
+                    if self.board[row][column + c][0] == 'w':
+                        flag = False
+                else:
+                    break
+
     def get_bishop_moves(self, row, column, moves):
         pass
     def get_knight_moves(self, row, column, moves):
@@ -99,7 +192,7 @@ class Move:
         self.piece_move = board[self.start_row][self.start_col]
         self.piece_captured = board[self.end_row][self.end_col]
         self.moveID = self.start_row * 1000 + self.start_col * 100 + self.end_row * 10 + self.end_col
-        print(self.moveID)
+        # print(self.moveID)
     """
     Override the equals method
     """

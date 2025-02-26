@@ -4,7 +4,7 @@ Hello World
 import pygame as p
 import ChessEngine
 
-print(dir())
+# print(dir())
 width = 512
 height = 512
 dimension = 8 #dimension of a chessboard
@@ -69,7 +69,7 @@ def main():
 
         if move_made:
             valid_moves = game_state.get_valid_moves()
-            move_made = False;
+            move_made = False
         draw_game_state(screen, game_state)
         clock.tick(mx_fps)
         p.display.flip()
