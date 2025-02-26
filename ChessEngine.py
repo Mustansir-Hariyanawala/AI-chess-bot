@@ -2,8 +2,6 @@
 This class is responsible for storing all the information about the current state of a chess game. It will be
 responsible for determining the valid moves at the current state. It will also keep a move log.
 """
-from operator import truediv
-
 
 class GameState:
     """
@@ -14,8 +12,8 @@ class GameState:
             ["bR", "bN", 'bB', 'bQ', 'bK', "bB", 'bN', 'bR'],
             ['bp', 'bp', 'bp', 'bp', 'bp', 'bp', 'bp', 'bp'],
             ['--', '--', '--', '--', '--', '--', '--', '--'],
-            ['--', '--', '--', '--', '--', '--', '--', '--'],
-            ['--', '--', '--', '--', '--', '--', '--', '--'],
+            ['--', '--', '--', '--', 'bQ', '--', '--', '--'],
+            ['--', '--', '--', 'wQ', '--', '--', '--', '--'],
             ['--', '--', '--', '--', '--', '--', '--', '--'],
             ['wp', 'wp', 'wp', 'wp', 'wp', 'wp', 'wp', 'wp'],
             ["wR", "wN", 'wB', 'wQ', 'wK', "wB", 'wN', 'wR']
@@ -95,86 +93,92 @@ class GameState:
             if column + 1 <= 7:
                 if self.board[row + 1][column + 1][0] == 'w': #enemy piece to capture
                     moves.append(Move((row, column), (row + 1, column + 1),self.board))
+        # let's add promotion later
 
-
-    def get_rook_moves(self, row, column, moves):
-
-        if self.whiteToMove:
-            flag = True
-            for r in range(1, row + 1):
-                if self.board[row - r][column][0] != "w" and flag:
-                    moves.append(Move((row, column),(row - r, column), self.board))
-                    if self.board[row - r][column][0] == 'b':
-                        flag = False
-                else:
-                    break
-            flag = True
-            for r in range(1, 8 - row):
-                if self.board[row + r][column][0] != "w" and flag:
-                    moves.append(Move((row, column), (row + r, column), self.board))
-                    if self.board[row + r][column][0] == 'b':
-                        flag = False
-
-                else:
-                    break
-            flag = True
-            for c in range(1, column + 1):
-                if self.board[row][column - c][0] != "w" and flag:
-                    moves.append(Move((row, column),(row, column - c), self.board))
-                    if self.board[row][column - c][0] == 'b':
-                        flag = False
-                else:
-                    break
-            flag = True
-            for c in range(1, 8 - column):
-                if self.board[row][column + c][0] != "w" and flag:
-                    moves.append(Move((row, column),(row, column + c), self.board))
-                    if self.board[row][column + c][0] == 'b':
-                        flag = False
-                else:
-                    break
-        else:
-            flag = True
-            for r in range(1, row + 1):
-                if self.board[row - r][column][0] != "b" and flag:
-                    moves.append(Move((row, column),(row - r, column), self.board))
-                    if self.board[row - r][column][0] == 'w':
-                        flag = False
-                else:
-                    break
-            flag = True
-            for r in range(1, 8 - row):
-                if self.board[row + r][column][0] != "b" and flag:
-                    moves.append(Move((row, column),(row + r, column), self.board))
-                    if self.board[row + r][column][0] == 'w':
-                        flag = False
-                else:
-                    break
-            flag = True
-            for c in range(1, column + 1):
-                if self.board[row][column - c][0] != "b" and flag:
-                    moves.append(Move((row, column),(row, column - c), self.board))
-                    if self.board[row][column - c][0] == 'w':
-                        flag = False
-                else:
-                    break
-            flag = True
-            for c in range(1, 8 - column):
-                if self.board[row][column + c][0] != "b" and flag:
-                    moves.append(Move((row, column),(row, column + c), self.board))
-                    if self.board[row][column + c][0] == 'w':
-                        flag = False
-                else:
-                    break
+    def get_rook_moves (self, row, column, moves):
+        flag = True
+        opponent = 'b' if self.whiteToMove else 'w'
+        turn = 'w' if self.whiteToMove else 'b'
+        for r in range(1, row + 1):
+            if self.board[row - r][column][0] != turn and flag:
+                moves.append(Move((row, column), (row - r, column), self.board))
+                if self.board[row - r][column][0] == opponent:
+                    flag = False
+            else:
+                break
+        flag = True
+        for r in range(1, 8 - row):
+            if self.board[row + r][column][0] != turn and flag:
+                moves.append(Move((row, column), (row + r, column), self.board))
+                if self.board[row + r][column][0] == opponent:
+                    flag = False
+            else:
+                break
+        flag = True
+        for c in range(1, column + 1):
+            if self.board[row][column - c][0] != turn and flag:
+                moves.append(Move((row, column), (row, column - c), self.board))
+                if self.board[row][column - c][0] == opponent:
+                    flag = False
+            else:
+                break
+        flag = True
+        for c in range(1, 8 - column):
+            if self.board[row][column + c][0] != turn and flag:
+                moves.append(Move((row, column), (row, column + c), self.board))
+                if self.board[row][column + c][0] == opponent:
+                    flag = False
+            else:
+                break
 
     def get_bishop_moves(self, row, column, moves):
-        pass
+        turn = 'w' if self.whiteToMove else 'b'
+        opponent = 'b' if self.whiteToMove else 'w'
+        flag = True
+        for r in range(1, min(row + 1, column + 1)):
+            if flag and self.board[row - r][column - r][0] != turn:
+                moves.append(Move((row, column), (row - r, column - r), self.board))
+                if self.board[row - r][column][0] == opponent:
+                    flag = False
+            else:
+                break
+        flag = True
+        for r in range(1, min(8 - row, column + 1)):
+            if flag and self.board[row + r][column - r][0] != turn:
+                moves.append(Move((row, column), (row + r, column - r), self.board))
+                if self.board[row + r][column - r][0] == opponent:
+                    flag = False
+
+            else:
+                break
+        flag = True
+        for c in range(1, min(8 - column, row + 1)):
+            if flag and self.board[row - c][column + c][0] != turn:
+                moves.append(Move((row, column), (row - c, column + c), self.board))
+                if self.board[row - c][column + c][0] == opponent:
+                    flag = False
+            else:
+                break
+        flag = True
+        for c in range(1, min(8 - column, 8 - row)):
+            if flag and self.board[row + c][column + c][0] != turn:
+                moves.append(Move((row, column), (row + c, column + c), self.board))
+                if self.board[row + c][column + c][0] == opponent:
+                    flag = False
+            else:
+                break
+
     def get_knight_moves(self, row, column, moves):
         pass
+
     def get_queen_moves(self, row, column, moves):
-        pass
+        self.get_bishop_moves(row, column, moves)
+        self.get_rook_moves(row, column, moves)
+
     def get_king_moves(self, row, column, moves):
         pass
+
+
 
 
 class Move:
