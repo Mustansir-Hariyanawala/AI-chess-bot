@@ -59,8 +59,10 @@ def main():
                     if move in valid_moves:
                         game_state.make_move(move)
                         move_made = True
-                    selected_square = () #reset user clicks
-                    player_click = []
+                        selected_square = () #reset user clicks
+                        player_click = []
+                    else:
+                        player_click = [selected_square]
 
             elif e.type == p.KEYDOWN:
                 if e.key == p.K_z: #undo when 'z' is pressed
