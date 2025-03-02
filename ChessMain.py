@@ -2,6 +2,8 @@
 Hello World
 """
 import pygame as p
+import pygame.color
+
 import ChessEngine
 
 # print(dir())
@@ -9,7 +11,7 @@ width = 512
 height = 512
 dimension = 8 #dimension of a chessboard
 square_size = height // dimension
-mx_fps = 15
+mx_fps = 60
 img = {}
 
 """
@@ -59,7 +61,7 @@ def main():
                     if move in valid_moves:
                         game_state.make_move(move)
                         move_made = True
-                        selected_square = () #reset user clicks
+                        selected_square = ()  # reset user clicks
                         player_click = []
                     else:
                         player_click = [selected_square]
@@ -71,6 +73,12 @@ def main():
 
         if move_made:
             valid_moves = game_state.get_valid_moves()
+            if len(valid_moves) == 0:
+                white = pygame.color.Color('#000000')
+                black = pygame.color.Color('#ffffff')
+                font = pygame.font.Font(None, 40)
+                text = font.render("CheckMate", False, black)
+                screen.blit(text, (0, 0))
             move_made = False
         draw_game_state(screen, game_state)
         clock.tick(mx_fps)
