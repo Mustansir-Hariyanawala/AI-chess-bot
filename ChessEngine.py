@@ -292,21 +292,23 @@ class GameState:
                 piece_pinned = True
                 self.pins.remove(self.pins[i])
                 break
+        turn = 'w' if self.whiteToMove else 'b'   
         pre_compute = ((-2, -1), (-1, -2), (-1, 2), (2, -1), (1, -2), (-2, 1), (1, 2), (2, 1))
         for pre in pre_compute:
             new_row = row + pre[0]
             new_col = column + pre[1]
             if 0 <= new_row < 8 and 0 <= new_col < 8:
-                if not piece_pinned:
-                    moves.append(Move((row, column), (new_row, new_col), self.board))
+              if self.board[new_row][new_col][0] != turn:
+                  if not piece_pinned:
+                      moves.append(Move((row, column), (new_row, new_col), self.board))
 
     def get_queen_moves(self, row, column, moves):
         self.get_bishop_moves(row, column, moves)
         self.get_rook_moves(row, column, moves)
 
     def get_king_moves(self, row, column, moves):
-        row_moves = (-1, -1, -1, 0, 0, 1, 1, 1)
-        col_moves = (-1, 0, 1, -1, 1, -1, 0, 1)
+        # row_moves = (-1, -1, -1, 0, 0, 1, 1, 1)
+        # col_moves = (-1, 0, 1, -1, 1, -1, 0, 1)
         opponent = 'b' if self.whiteToMove else 'w'
         turn = 'w' if self.whiteToMove else 'b'
         pre_compute = ((-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1))

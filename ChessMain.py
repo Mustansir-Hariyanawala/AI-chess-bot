@@ -13,7 +13,7 @@ dimension = 8 #dimension of a chessboard
 square_size = height // dimension
 mx_fps = 60
 img = {}
-
+#C:\AI_CHESS_BOT\AI-chess-bot\images\bB.png
 """
 initialize global dictionary of images. This will be called
 """
@@ -55,7 +55,7 @@ def main():
                     selected_square = (row, col)
                     player_click.append(selected_square) #append for both 1st and 2nd clicks
                 if len(player_click) == 2: #after 2nd click
-                    move = ChessEngine.Move(player_click[0], player_click[1], game_state.board)
+                    move = ChessEngine.Move(player_click[0], player_click[1],game_state.board)
                     print(move.get_chess_notation()) #prints move made
 
                     if move in valid_moves:
@@ -74,12 +74,13 @@ def main():
         if move_made:
             valid_moves = game_state.get_valid_moves()
             if len(valid_moves) == 0:
-                white = pygame.color.Color('#000000')
-                black = pygame.color.Color('#ffffff')
-                font = pygame.font.Font(None, 40)
-                text = font.render("CheckMate", False, black)
-                screen.blit(text, (0, 0))
-            move_made = False
+                # white = pygame.color.Color('#000000')
+                # black = pygame.color.Color('#ffffff')
+                # font = pygame.font.Font(None, 40)
+                # text = font.render("CheckMate", False, black)
+                # screen.blit(text, (0, 0))
+              running = False
+              move_made = False
         draw_game_state(screen, game_state)
         clock.tick(mx_fps)
         p.display.flip()
