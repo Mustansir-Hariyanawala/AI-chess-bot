@@ -2,11 +2,10 @@
 Hello World
 """
 import pygame as p
-import pygame.color
 
 import ChessEngine
 
-# print(dir())
+# help(p.Rect)
 width = 512
 height = 512
 dimension = 8 #dimension of a chessboard
@@ -27,6 +26,7 @@ def load_images():
 def main():
     p.init()
     screen = p.display.set_mode((width, height))
+    p.display.set_caption("Center-Aligned Text")
     clock = p.time.Clock()
     screen.fill(p.Color("white"))
     game_state = ChessEngine.GameState()
@@ -74,20 +74,14 @@ def main():
         if move_made:
             valid_moves = game_state.get_valid_moves()
             if len(valid_moves) == 0:
-                # white = pygame.color.Color('#000000')
-                # black = pygame.color.Color('#ffffff')
-                # font = pygame.font.Font(None, 40)
-                # text = font.render("CheckMate", False, black)
-                # screen.blit(text, (0, 0))
-              running = False
-              move_made = False
-        draw_game_state(screen, game_state)
+                continue
+        draw_game_state(screen, game_state, len(valid_moves))
         clock.tick(mx_fps)
         p.display.flip()
 
-def draw_game_state(screen, game_state):
+def draw_game_state(screen, game_state, length_valid_moves):
     draw_board(screen) #draw squares on Board
-    draw_pieces(screen, game_state.board) #draw piece on the squares
+    draw_pieces(screen, game_state.board, length_valid_moves, game_state.whiteToMove) #draw piece on the squares
 
 
 def draw_board(screen):
@@ -103,7 +97,7 @@ def draw_board(screen):
 used to draw pieces on the board. The reason we are not adding draw_pieces content
 within draw_board is because we will had highlights.
 """
-def draw_pieces(screen, game_state):
+def draw_pieces(screen, game_state, length_valid_moves, white_to_move):
     for row in range(dimension):
         for col in range(dimension):
             piece = game_state[row][col]
@@ -112,6 +106,13 @@ def draw_pieces(screen, game_state):
                                            row * square_size,
                                            square_size,
                                            square_size))
+    if length_valid_moves == 0:
+        p.draw.rect(screen, p.Color('black'), p.Rect(116, 180, 280, 152))
+        rectangles = p.draw.rect(screen, p.Color('white'), p.Rect(118, 182, 276, 148))
+        text = p.font.Font(None, 50).render(
+            (("white" if white_to_move else "black") + " wins"), True, (0, 0, 0))
+        rect_text = text.get_rect(center = rectangles.center)
+        screen.blit(text, rect_text)
 
 
 
