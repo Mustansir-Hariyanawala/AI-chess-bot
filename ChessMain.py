@@ -58,12 +58,13 @@ def main():
                     move = ChessEngine.Move(player_click[0], player_click[1],game_state.board)
                     print(move.get_chess_notation()) #prints move made
 
-                    if move in valid_moves:
-                        game_state.make_move(move)
-                        move_made = True
-                        selected_square = ()  # reset user clicks
-                        player_click = []
-                    else:
+                    for i in range(len(valid_moves)):
+                        if move == valid_moves[i]:
+                            game_state.make_move(move)
+                            move_made = True
+                            selected_square = ()  # reset user clicks
+                            player_click = []
+                    if not move_made:
                         player_click = [selected_square]
 
             elif e.type == p.KEYDOWN:

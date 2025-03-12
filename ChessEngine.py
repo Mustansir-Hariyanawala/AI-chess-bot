@@ -13,7 +13,7 @@ class GameState:
             ['bp', 'bp', 'bp', 'bp', 'bp', 'bp', 'bp', 'bp'],
             ['--', '--', '--', '--', '--', '--', '--', '--'],
             ['--', '--', '--', '--', '--', '--', '--', '--'],
-            ['--', '--', '--', '--', '--', '--', '--', '--'],
+            ['--', '--', '--', 'wp', 'bp', '--', '--', '--'],
             ['--', '--', '--', '--', '--', '--', '--', '--'],
             ['wp', 'wp', 'wp', 'wp', 'wp', 'wp', 'wp', 'wp'],
             ["wR", "wN", 'wB', 'wQ', 'wK', "wB", 'wN', 'wR']
@@ -34,6 +34,7 @@ class GameState:
         self.is_in_check = False
         self.pins = []
         self.checks = []
+        self.possible_enpassant = () #coordinate of en passant possible
 
     #takes moves as parameter and executes it (this will not work for castling, pawn promotion and en passant
     def make_move(self, move):
@@ -45,8 +46,18 @@ class GameState:
             self.white_king_loc = (move.end_row, move.end_col)
         elif move.piece_move == 'bK':
             self.black_king_loc = (move.end_row, move.end_col)
+        #pawn promotion
+        if move.pawn_promoted:
+            self.board[move.end_row][move.end_col] = move.piece_move[0] + "Q"
+        #enpassant
+        if move.enpassant_move:
+            self.board[move.start_col][move.start_col] == '--'
 
-
+        #update enpassant_possible variable
+        if move.piece_move[1] == 'p' and abs(move.start_row - move.end_row) == 2:
+            self.possible_enpassant = ((move.start_row + move.end_row) // 2, move.start_col )
+        else:
+            self.possible_enpassant = ()
     def undo_move(self):
         if len(self.moveLog) == 0:
             return
@@ -63,6 +74,8 @@ class GameState:
     All moves considering checks
     '''
     def get_valid_moves(self):
+        temp_enpassant_possible = self.possible_enpassant
+
         moves = []
         #2.) for each move, check for pins, checks and if currently it's in check
         self.pins, self.checks, self.is_in_check = self.check_for_pins_and_checks()
@@ -190,40 +203,54 @@ class GameState:
                 self.pins.remove(self.pins[i])
                 break
         if self.whiteToMove: #white to move
+
             if self.board[row - 1][column] == '--':#1 square pawn advance
                 if not piece_pinned or pin_dir == (-1, 0):
                     moves.append(Move((row, column), (row - 1, column), self.board))
                     if row == 6 and self.board[row - 2][column] == '--':
-                        if not piece_pinned or pin_dir == (-2, 0):
-                            moves.append(Move((row, column), (row - 2, column), self.board))
+                        moves.append(Move((row, column), (row - 2, column), self.board))
 
             if column - 1 >= 0:
                 if self.board[row - 1][column - 1][0] == 'b': #enemy piece to capture
                     if not piece_pinned or pin_dir == (-1, -1):
                         moves.append(Move((row, column),(row - 1, column - 1),self.board))
+                elif (row - 1, column - 1) == self.possible_enpassant:  # Top-left
+                    if not piece_pinned or pin_dir == (-1, -1):
+                        moves.append(Move((row, column), (row - 1, column - 1),
+                                          self.board, enpassant_possible=True))
+                
 
             if column + 1 <= 7:
                 if self.board[row - 1][column + 1][0] == 'b': #enemy piece to capture
                     if not piece_pinned or pin_dir == (-1, 1):
                         moves.append(Move((row, column),(row - 1, column + 1),self.board))
+                elif (row - 1, column + 1) == self.possible_enpassant:  # Top-right
+                    if not piece_pinned or pin_dir == (-1, 1):
+                        moves.append(Move((row, column), (row - 1, column + 1),
+                                          self.board, enpassant_possible=True))
 
         else:  # black to move
             if self.board[row + 1][column] == '--': #1 square pawn advance
                 if not piece_pinned or pin_dir == (1, 0):
                     moves.append(Move((row, column),(row + 1, column),self.board))
                     if row == 1 and self.board[row + 2][column] == '--':
-                        if not piece_pinned or pin_dir == (2, 0):
-                            moves.append(Move((row, column),(row + 2, column), self.board))
+                        moves.append(Move((row, column),(row + 2, column), self.board))
 
             if column - 1 >= 0:
                 if self.board[row + 1][column - 1][0] == 'w': #enemy piece to capture
                     if not piece_pinned or pin_dir == (1, -1):
                         moves.append(Move((row, column),(row + 1, column - 1), self.board))
+                elif (row + 1, column - 1) == self.possible_enpassant: #enemy piece to capture
+                    if not piece_pinned or pin_dir == (1, -1):
+                        moves.append(Move((row, column),(row + 1, column - 1), self.board, enpassant_possible=True))
 
             if column + 1 <= 7:
                 if self.board[row + 1][column + 1][0] == 'w': #enemy piece to capture
                     if not piece_pinned or pin_dir == (1, 1):
                         moves.append(Move((row, column), (row + 1, column + 1),self.board))
+                elif (row + 1, column + 1) == self.possible_enpassant: #enemy piece to capture
+                    if not piece_pinned or pin_dir == (1, 1):
+                        moves.append(Move((row, column),(row + 1, column + 1), self.board, enpassant_possible=True))
 
     def get_rook_moves(self, row, column, moves):
         piece_pinned = False
@@ -337,13 +364,16 @@ class Move:
     columns_to_files = {value: key for key, value in files_to_columns.items()}
     # print(ranks_to_rows, rows_to_rank, columns_to_files, files_to_columns, sep = "\n")
 
-    def __init__ (self, square_start, square_end, board):
+    def __init__ (self, square_start, square_end, board, enpassant_possible = False):
         self.start_row = square_start[0]
         self.start_col = square_start[1]
         self.end_row = square_end[0]
         self.end_col = square_end[1]
         self.piece_move = board[self.start_row][self.start_col]
         self.piece_captured = board[self.end_row][self.end_col]
+        self.pawn_promoted = ((self.piece_move == 'wp' and self.end_row == 0) or
+                              (self.piece_move == 'bp' and self.end_row == 7))
+        self.enpassant_move = (self.piece_move[1] == 'p' and (self.end_row, self.end_col) == enpassant_possible)
         self.moveID = self.start_row * 1000 + self.start_col * 100 + self.end_row * 10 + self.end_col
         # print(self.moveID)
     """
