@@ -1,4 +1,4 @@
-from .ChessEngine import GameState, Move
+from .ChessEngine import GameState, Move, CastleRights
 
 
-__all__ = ["GameState", "Move"]
+__all__ = ["GameState", "Move", "CastleRights"]
