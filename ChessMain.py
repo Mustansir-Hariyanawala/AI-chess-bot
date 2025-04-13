@@ -37,7 +37,7 @@ def main():
     running = True
     selected_square = () #no square selected , keep track of the last click of user (tuple: (row, col))
     player_click = [] #keep track of player clicks (two tuples: [(6, 4), (4, 4)]
-
+    gameOver = False
     while running:
         for e in p.event.get():
 
@@ -45,55 +45,82 @@ def main():
                 running = False
 
             elif e.type == p.MOUSEBUTTONDOWN:
-                position = p.mouse.get_pos() #(x, y)
-                col = position[0]//square_size
-                row = position[1]//square_size
-                if selected_square == (row, col): #the user clicked same square twice
-                    selected_square = ()
-                    player_click = [] #clear player clicks
+                if not gameOver:
+                    position = p.mouse.get_pos() #(x, y)
+                    col = position[0]//square_size
+                    row = position[1]//square_size
 
-                else:
-                    selected_square = (row, col)
-                    player_click.append(selected_square) #append for both 1st and 2nd clicks
-                if len(player_click) == 2: #after 2nd click
-                    move = Moves.Move(player_click[0], player_click[1],game_state.board)
-                    print(move.get_chess_notation()) #prints move made
+                    if selected_square == (row, col): #the user clicked same square twice
+                        selected_square = ()
+                        player_click = [] #clear player clicks
 
-                    for i in range(len(valid_moves)):
-                        if move == valid_moves[i]:
-                            game_state.make_move(valid_moves[i])
-                            move_made = True
-                            animate = True
-                            selected_square = ()  # reset user clicks
-                            player_click = []
-                    if not move_made:
-                        player_click = [selected_square]
+                    else:
+                        selected_square = (row, col)
+                        player_click.append(selected_square) #append for both 1st and 2nd clicks
+                    if len(player_click) == 2: #after 2nd click
+                        move = Moves.Move(player_click[0], player_click[1],game_state.board)
+                        print(move.get_chess_notation()) #prints move made
+
+                        for i in range(len(valid_moves)):
+                            if move == valid_moves[i]:
+                                game_state.make_move(valid_moves[i])
+                                move_made = True
+                                animate = True
+                                selected_square = ()  # reset user clicks
+                                player_click = []
+                        if not move_made:
+                            player_click = [selected_square]
 
             elif e.type == p.KEYDOWN:
                 if e.key == p.K_z: #undo when 'z' is pressed
                     game_state.undo_move()
                     move_made = True
                     animate = False
+                if e.key == p.K_r:
+                    game_state = ChessEngine.GameState()
+                    valid_moves = game_state.get_valid_moves()
+                    selected_square = ()
+                    player_click = []
+                    move_made = False
+                    move_made = False
+
 
         if move_made:
             if animate:
-                animate_move(screen, game_state.board, game_state.moveLog[-1], img, clock)
+                animate_move(screen, game_state.board, game_state.moveLog[-1], clock)
             valid_moves = game_state.get_valid_moves()
+            move_made = False
+            animate = False
+
         draw_game_state(screen, game_state, valid_moves, selected_square)
+
+        if len(valid_moves) == 0:
+            game_over = True
+            winner = "White" if not game_state.whiteToMove else "Black"
+            draw_text(screen, winner + " wins by checkmate")
+
+
         clock.tick(mx_fps)
         p.display.flip()
+def draw_text(screen, text):
+    font = p.font.SysFont("Helvitca", 32, True, False)
+    text_object = font.render(text, 0, p.Color('Gray'))
+    text_location = p.Rect(0, 0, width, height).move(width/2 - text_object.get_width()/2, height/2 - text_object.get_height()/2)
+    screen.blit(text_object, text_location)
+    text_object = font.render(text, 0, p.Color('Black'))
+    screen.blit(text_object, text_location.move(2, 2))
 
-def animate_move(screen, board ,move_made, img, clock):
+
+def animate_move(screen, board ,move_made, clock):
     global colours
     dr = move_made.end_row - move_made.start_row
     dc = move_made.end_col - move_made.start_col
-    frame_per_square = 10
+    frame_per_square = 5
     frame_count = (abs(dr) + abs(dc)) * frame_per_square
     for frame in range(frame_count + 1):
         r, c = (move_made.start_row + dr * frame/ frame_count, move_made.start_col + dc * frame/ frame_count)
         draw_board(screen)
         draw_pieces(screen, board)
-
         colour = colours[(move_made.end_row + move_made.end_col) % 2]
         end_square = p.Rect(move_made.end_col * square_size, move_made.end_row * square_size,\
                             square_size, square_size)
