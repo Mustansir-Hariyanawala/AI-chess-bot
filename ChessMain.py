@@ -3,14 +3,15 @@ Hello World
 """
 import pygame as p
 
-import ChessEngine
+import ChessEngine, ChessDeterminer
 import Moves
-# help(p.Rect)
+
+
 width = 512
 height = 512
 dimension = 8 #dimension of a chessboard
 square_size = height // dimension
-mx_fps = 60
+mx_fps = 200
 img = {}
 #C:\AI_CHESS_BOT\AI-chess-bot\images\bB.png
 """
@@ -37,15 +38,18 @@ def main():
     running = True
     selected_square = () #no square selected , keep track of the last click of user (tuple: (row, col))
     player_click = [] #keep track of player clicks (two tuples: [(6, 4), (4, 4)]
-    gameOver = False
+    game_over = False
+    human_player = True #human player
+    ai_player = False #AI player turn
     while running:
+        human_turn = (game_state.whiteToMove and human_player) or (not game_state.whiteToMove and ai_player)
         for e in p.event.get():
 
             if e.type == p.QUIT:
                 running = False
 
             elif e.type == p.MOUSEBUTTONDOWN:
-                if not gameOver:
+                if not game_over:
                     position = p.mouse.get_pos() #(x, y)
                     col = position[0]//square_size
                     row = position[1]//square_size
@@ -76,14 +80,23 @@ def main():
                     game_state.undo_move()
                     move_made = True
                     animate = False
+                    game_over = False
                 if e.key == p.K_r:
                     game_state = ChessEngine.GameState()
                     valid_moves = game_state.get_valid_moves()
                     selected_square = ()
                     player_click = []
                     move_made = False
-                    move_made = False
+                    animate = False
+                    game_over = False
 
+        if not game_over and not human_turn:
+            ai_moves = ChessDeterminer.find_best_move_minmax(game_state, valid_moves)
+            if ai_moves is None:
+                ai_moves = ChessDeterminer.random_moves(valid_moves)
+            game_state.make_move(ai_moves)
+            move_made = True
+            animate = True
 
         if move_made:
             if animate:
@@ -94,16 +107,21 @@ def main():
 
         draw_game_state(screen, game_state, valid_moves, selected_square)
 
-        if len(valid_moves) == 0:
+        if game_state.count_moves == 0 :
             game_over = True
-            winner = "White" if not game_state.whiteToMove else "Black"
-            draw_text(screen, winner + " wins by checkmate")
+            winner = ''
+            if game_state.stale_mate:
+                winner += "Stalemate, "
+            elif game_state.check_mate:
+                winner += "Checkmate, "
+            winner += "White" if not game_state.whiteToMove else "Black"
+            draw_text(screen, winner + " wins!!")
 
 
         clock.tick(mx_fps)
         p.display.flip()
 def draw_text(screen, text):
-    font = p.font.SysFont("Helvitca", 32, True, False)
+    font = p.font.SysFont("Algeria", 32, True, False)
     text_object = font.render(text, 0, p.Color('Gray'))
     text_location = p.Rect(0, 0, width, height).move(width/2 - text_object.get_width()/2, height/2 - text_object.get_height()/2)
     screen.blit(text_object, text_location)
@@ -122,14 +140,14 @@ def animate_move(screen, board ,move_made, clock):
         draw_board(screen)
         draw_pieces(screen, board)
         colour = colours[(move_made.end_row + move_made.end_col) % 2]
-        end_square = p.Rect(move_made.end_col * square_size, move_made.end_row * square_size,\
+        end_square = p.Rect(move_made.end_col * square_size, move_made.end_row * square_size,
                             square_size, square_size)
         p.draw.rect(screen, colour, end_square)
         if move_made.piece_captured != "--":
             screen.blit(img[move_made.piece_captured], end_square)
         screen.blit(img[move_made.piece_move], p.Rect(c * square_size, r * square_size, square_size, square_size))
         p.display.flip()
-        clock.tick(60)
+        clock.tick(mx_fps)
 
 
     # piece = game_state.board[move_made.start_row][move_made.start_col]

@@ -3,6 +3,7 @@ This class is responsible for storing all the information about the current stat
 responsible for determining the valid moves at the current state. It will also keep a move log.
 """
 from Moves import Move
+
 class CastleRights:
 
     def __init__(self, white_king, black_king, white_queen, black_queen):
@@ -44,7 +45,10 @@ class GameState:
         self.pins = []
         self.checks = []
         self.possible_enpassant = () #coordinate of en passant possible
-
+        self.count_moves = 0
+        self.count_check = 0
+        self.check_mate = False
+        self.stale_mate = False
         #castling
         self.white_castle_king_side = True
         self.white_castle_queen_side = True
@@ -151,6 +155,10 @@ class GameState:
             else:
                 self.board[move.end_row][move.end_col - 2] = self.board[move.end_row][move.end_col + 1]
                 self.board[move.end_row][move.end_col + 1] = '--'
+
+        self.checks.clear()
+        self.check_mate = False
+        self.stale_mate = False
     '''
     All moves considering checks
     '''
@@ -188,6 +196,11 @@ class GameState:
                 self.get_king_moves(king_row, king_col, moves)
         else:
             moves = self.get_all_possible_move()
+
+        self.count_moves = len(moves)
+        self.count_check = len(self.checks)
+        self.check_mate = self.count_moves == 0 and self.count_check != 0
+        self.stale_mate = self.count_moves == self.count_check == 0
         return moves
 
     """
